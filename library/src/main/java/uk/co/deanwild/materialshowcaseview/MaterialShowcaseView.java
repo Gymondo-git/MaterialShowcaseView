@@ -82,27 +82,27 @@ public class MaterialShowcaseView extends FrameLayout implements View.OnTouchLis
 
     public MaterialShowcaseView(Context context) {
         super(context);
-        init(context);
+        init();
     }
 
     public MaterialShowcaseView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        init(context);
+        init();
     }
 
     public MaterialShowcaseView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        init(context);
+        init();
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public MaterialShowcaseView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
-        init(context);
+        init();
     }
 
 
-    private void init(Context context) {
+    private void init() {
         setWillNotDraw(false);
 
         mListeners = new ArrayList<>();
@@ -117,12 +117,11 @@ public class MaterialShowcaseView extends FrameLayout implements View.OnTouchLis
         mMaskColour = Color.parseColor(ShowcaseConfig.DEFAULT_MASK_COLOUR);
         setVisibility(INVISIBLE);
 
-
         View contentView = LayoutInflater.from(getContext()).inflate(R.layout.showcase_content, this, true);
         mContentBox = contentView.findViewById(R.id.content_box);
-        mTitleTextView = (TextView) contentView.findViewById(R.id.tv_title);
-        mContentTextView = (TextView) contentView.findViewById(R.id.tv_content);
-        mDismissButton = (TextView) contentView.findViewById(R.id.tv_dismiss);
+        mTitleTextView = contentView.findViewById(R.id.tv_title);
+        mContentTextView = contentView.findViewById(R.id.tv_content);
+        mDismissButton = contentView.findViewById(R.id.tv_dismiss);
         mDismissButton.setOnClickListener(this);
     }
 
@@ -146,7 +145,7 @@ public class MaterialShowcaseView extends FrameLayout implements View.OnTouchLis
         final int height = getMeasuredHeight();
 
         // don't bother drawing if there is nothing to draw on
-        if(width <= 0 || height <= 0) return;
+        if (width <= 0 || height <= 0) return;
 
         // build a new canvas if needed i.e first pass or new dimensions
         if (mBitmap == null || mCanvas == null || mOldHeight != height || mOldWidth != width) {
@@ -206,8 +205,8 @@ public class MaterialShowcaseView extends FrameLayout implements View.OnTouchLis
         if (mDismissOnTouch) {
             hide();
         }
-        if(mTargetTouchable && mTarget.getBounds().contains((int)event.getX(), (int)event.getY())){
-            if(mDismissOnTargetTouch){
+        if (mTargetTouchable && mTarget.getBounds().contains((int) event.getX(), (int) event.getY())) {
+            if (mDismissOnTargetTouch) {
                 hide();
             }
             return false;
@@ -218,7 +217,7 @@ public class MaterialShowcaseView extends FrameLayout implements View.OnTouchLis
 
     private void notifyOnDisplayed() {
 
-        if(mListeners != null){
+        if (mListeners != null) {
             for (IShowcaseListener listener : mListeners) {
                 listener.onShowcaseDisplayed(this);
             }
@@ -425,11 +424,11 @@ public class MaterialShowcaseView extends FrameLayout implements View.OnTouchLis
         mFadeDurationInMillis = fadeDurationInMillis;
     }
 
-    private void setTargetTouchable(boolean targetTouchable){
+    private void setTargetTouchable(boolean targetTouchable) {
         mTargetTouchable = targetTouchable;
     }
 
-    private void setDismissOnTargetTouch(boolean dismissOnTargetTouch){
+    private void setDismissOnTargetTouch(boolean dismissOnTargetTouch) {
         mDismissOnTargetTouch = dismissOnTargetTouch;
     }
 
@@ -439,7 +438,7 @@ public class MaterialShowcaseView extends FrameLayout implements View.OnTouchLis
 
     public void addShowcaseListener(IShowcaseListener showcaseListener) {
 
-        if(mListeners != null)
+        if (mListeners != null)
             mListeners.add(showcaseListener);
     }
 
@@ -586,20 +585,20 @@ public class MaterialShowcaseView extends FrameLayout implements View.OnTouchLis
 
         /**
          * Set whether or not the target view can be touched while the showcase is visible.
-         *
+         * <p>
          * False by default.
          */
-        public Builder setTargetTouchable(boolean targetTouchable){
+        public Builder setTargetTouchable(boolean targetTouchable) {
             showcaseView.setTargetTouchable(targetTouchable);
             return this;
         }
 
         /**
          * Set whether or not the showcase should dismiss when the target is touched.
-         *
+         * <p>
          * True by default.
          */
-        public Builder setDismissOnTargetTouch(boolean dismissOnTargetTouch){
+        public Builder setDismissOnTargetTouch(boolean dismissOnTargetTouch) {
             showcaseView.setDismissOnTargetTouch(dismissOnTargetTouch);
             return this;
         }
@@ -712,10 +711,9 @@ public class MaterialShowcaseView extends FrameLayout implements View.OnTouchLis
 
             if (showcaseView.mAnimationFactory == null) {
                 // create our animation factory
-                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !showcaseView.mUseFadeAnimation) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !showcaseView.mUseFadeAnimation) {
                     showcaseView.setAnimationFactory(new CircularRevealAnimationFactory());
-                }
-                else {
+                } else {
                     showcaseView.setAnimationFactory(new FadeAnimationFactory());
                 }
             }
@@ -807,8 +805,9 @@ public class MaterialShowcaseView extends FrameLayout implements View.OnTouchLis
 
     public void hide() {
 
-        /**
-         * This flag is used to indicate to onDetachedFromWindow that the showcase view was dismissed purposefully (by the user or programmatically)
+        /*
+         * This flag is used to indicate to onDetachedFromWindow that the showcase view was dismissed
+         * purposefully (by the user or programmatically)
          */
         mWasDismissed = true;
 
@@ -820,28 +819,37 @@ public class MaterialShowcaseView extends FrameLayout implements View.OnTouchLis
     }
 
     public void animateIn() {
-        setVisibility(INVISIBLE);
+        if (mAnimationFactory == null) {
+            setVisibility(View.VISIBLE);
+            notifyOnDisplayed();
+        } else {
+            setVisibility(INVISIBLE);
 
-        mAnimationFactory.animateInView(this, mTarget.getPoint(), mFadeDurationInMillis,
-                new IAnimationFactory.AnimationStartListener() {
-                    @Override
-                    public void onAnimationStart() {
-                        setVisibility(View.VISIBLE);
-                        notifyOnDisplayed();
+            mAnimationFactory.animateInView(this, mTarget.getPoint(), mFadeDurationInMillis,
+                    new IAnimationFactory.AnimationStartListener() {
+                        @Override
+                        public void onAnimationStart() {
+                            setVisibility(View.VISIBLE);
+                            notifyOnDisplayed();
+                        }
                     }
-                }
-        );
+            );
+        }
     }
 
     public void animateOut() {
-
-        mAnimationFactory.animateOutView(this, mTarget.getPoint(), mFadeDurationInMillis, new IAnimationFactory.AnimationEndListener() {
-            @Override
-            public void onAnimationEnd() {
-                setVisibility(INVISIBLE);
-                removeFromWindow();
-            }
-        });
+        if (mAnimationFactory == null) {
+            setVisibility(INVISIBLE);
+            removeFromWindow();
+        } else {
+            mAnimationFactory.animateOutView(this, mTarget.getPoint(), mFadeDurationInMillis, new IAnimationFactory.AnimationEndListener() {
+                @Override
+                public void onAnimationEnd() {
+                    setVisibility(INVISIBLE);
+                    removeFromWindow();
+                }
+            });
+        }
     }
 
     public void resetSingleUse() {
